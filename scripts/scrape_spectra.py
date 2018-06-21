@@ -9,7 +9,7 @@ from astropy.table import Table, hstack
 import astropy.utils.data as aud
 
 
-def get_data(name, output):
+def get_data(name, output_directory):
 
     baseurl = 'http://gsaweb.ast.cam.ac.uk/alerts/alert'
 
@@ -26,14 +26,14 @@ def get_data(name, output):
 
     spectra = hstack([spectra_meta, spectra_data], join_type='outer')
 
-    if output is not None:
-        spectra.write(os.path.join(output, '{}.fits'.format(name)),
+    if output_directory is not None:
+        spectra.write(os.path.join(output_directory, '{}.fits'.format(name)),
                       overwrite=True)
 
     return spectra
 
 
-def make_plot(spectra, name, output, interval=200):
+def make_plot(spectra, name, output_directory, interval=200):
 
     fig, ax = plt.subplots()
     fig.set_tight_layout(True)
@@ -50,19 +50,23 @@ def make_plot(spectra, name, output, interval=200):
     anim = FuncAnimation(fig, update, frames=np.arange(0, len(spectra)),
                          interval=interval)
 
-    if output is not None:
-        anim.save(os.path.join(output, '{}.gif'.format(name)),
+    if output_directory is not None:
+        anim.save(os.path.join(output_directory, '{}.gif'.format(name)),
                   dpi=200, writer='imagemagick')
 
 
-def main(name='Gaia18ace', output='../outputs', make_plots=False):
+def main(name='Gaia18ace', output_directory='../outputs', make_plots=False):
     """
 
     """
-    spectra = get_data(name, output)
+    if output_directory is not None:
+        if not os.path.exists(output_directory):
+            os.makedirs(output_directory)
+
+    spectra = get_data(name, output_directory)
 
     if make_plots is True:
-        make_plot(spectra, name, output)
+        make_plot(spectra, name, output_directory)
 
 
 if __name__ == "__main__":
