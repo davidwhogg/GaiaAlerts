@@ -87,7 +87,7 @@ def make_plot(spectra, name, output_directory, interval=400):
                   dpi=200, writer='imagemagick')
 
 
-def main(name='Gaia18ace', output_directory='../outputs', make_plots=False):
+def main(name='Gaia18ace', output_directory='outputs', make_plots=False):
     """
     Function to scrape Gaia spectrum data from the GaiaAlers page.
 
@@ -101,7 +101,7 @@ def main(name='Gaia18ace', output_directory='../outputs', make_plots=False):
 
     output_directory : str
         Name of output directory. Use None if no output is required.
-        Defaults to '../outputs'. Results are overwritten.
+        Defaults to 'outputs'. Results are overwritten.
 
     make_plots : bool
         If True, creates a gif animation.
