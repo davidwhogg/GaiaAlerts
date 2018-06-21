@@ -1,4 +1,6 @@
 import os
+import re
+import ast
 import bs4
 import sys
 import warnings
@@ -9,7 +11,6 @@ from matplotlib.animation import FuncAnimation
 
 import astropy.utils.data as aud
 from astropy.table import Table, hstack, vstack
-from astropy.io.ascii import InconsistentTableError
 
 
 def get_data(name, output_directory):
@@ -19,19 +20,19 @@ def get_data(name, output_directory):
     content = aud.get_file_contents("{}/{}".format(baseurl, name), cache=True)
     htmldoc = bs4.BeautifulSoup(content, 'html5lib')
 
-    for line in htmldoc.strings:
-        if 'var spectra' in line:
-            spectra_data = line.split('=')[1].strip()
-
-            spectra_data = Table(eval(spectra_data[1:-2]))
+    search_text = re.compile('var spectra')
+    line = htmldoc.find('script', text=search_text)
 
     try:
-        spectra_meta = Table.read(content, format='ascii.html')
-    except InconsistentTableError:
-        if "Not found" in content:
-            warnings.warn("data is not found for {}, check whether it's a "
-                          "valid GaiaAlerts object".format(name))
-            return None
+        spectra_data = line.string.split('=')[1].strip()
+    except AttributeError:
+        warnings.warn("data is not found for {}, check whether it's a "
+                      "valid GaiaAlerts object".format(name))
+        return None
+
+    spectra_data = Table(ast.literal_eval(spectra_data[1:-2]))
+
+    spectra_meta = Table.read(content, format='ascii.html')
     spectra = hstack([spectra_meta, spectra_data], join_type='outer')
 
     spectra['Name'] = name
