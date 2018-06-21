@@ -55,13 +55,14 @@ def make_plot(spectra, name, output, interval=200):
                   dpi=200, writer='imagemagick')
 
 
-def main(name='Gaia18ace', output='../outputs'):
+def main(name='Gaia18ace', output='../outputs', make_plots=False):
     """
 
     """
     spectra = get_data(name, output)
 
-    make_plot(spectra, name, output)
+    if make_plots is True:
+        make_plot(spectra, name, output)
 
 
 if __name__ == "__main__":
