@@ -43,19 +43,40 @@ def get_data(name, output_directory):
     return spectra
 
 
-def make_plot(spectra, name, output_directory, interval=200):
+def make_plot(spectra, name, output_directory, interval=400):
 
-    fig, ax = plt.subplots()
+    # To be less sensitive to extreme outliers, we set the maximum values
+    # based on the median
+
+    max_b = np.median(np.max(spectra['bp'], axis=1)) * 2
+    max_r = np.median(np.max(spectra['rp'], axis=1)) * 2
+
+    fig, ax = plt.subplots(2, 1)
     fig.set_tight_layout(True)
+    ax[0].set_title(name)
 
-    line, = ax.plot(spectra[1]['rp'])
+    date_text = ax[0].text(0.02, 1.05, '', transform=ax[0].transAxes)
 
-    ax.set_xlabel('Pixel')
-    ax.set_ylabel('ADU')
+    line_b, = ax[0].plot(spectra[1]['bp'], color='b')
+    line_r, = ax[1].plot(spectra[1]['rp'], color='r')
+
+    line = [line_b, line_r]
+
+    ax[0].set_ylim(-0.1 * max_b, max_b)
+    ax[1].set_ylim(-0.1 * max_b, max_r)
+
+    ax[0].axhline(0., color="k", alpha=0.5, zorder=-10.)
+    ax[1].axhline(0., color="k", alpha=0.5, zorder=-10.)
+
+    ax[1].set_xlabel('Pixel')
+    ax[0].set_ylabel('Bp flux (Gaia units)')
+    ax[1].set_ylabel('Rp flux (Gaia units)')
 
     def update(i):
-        line.set_ydata(spectra[i]['rp'])
-        return line, ax
+        line_b.set_ydata(spectra[i]['bp'])
+        line_r.set_ydata(spectra[i]['rp'])
+        date_text.set_text('JD = {0:.2f}'.format(spectra[i]['JD']))
+        return line, date_text
 
     anim = FuncAnimation(fig, update, frames=np.arange(0, len(spectra)),
                          interval=interval)
@@ -106,12 +127,13 @@ def main(name='Gaia18ace', output_directory='../outputs', make_plots=False):
         else:
             spectra.append((alert_spectra, alert_name))
 
+    all_spectra = vstack([i[0] for i in spectra])
+
     if make_plots is True:
         for alert_spectra, alert_name in spectra:
-            make_plot(alert_spectra, name, output_directory)
+            make_plot(alert_spectra, alert_name, output_directory)
 
     if len(spectra) > 1:
-        all_spectra = vstack([i[0] for i in spectra])
         if output_directory is not None:
             all_spectra.write(os.path.join(output_directory,
                                            'GaiaAlertsspectra.fits'),
