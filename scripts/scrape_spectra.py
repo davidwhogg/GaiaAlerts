@@ -1,0 +1,73 @@
+import bs4
+import os
+import sys
+
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
+from astropy.table import Table, hstack
+import astropy.utils.data as aud
+
+
+def get_data(name, save=True):
+
+    baseurl = 'http://gsaweb.ast.cam.ac.uk/alerts/alert'
+
+    content = aud.get_file_contents("{}/{}".format(baseurl, name))
+    htmldoc = bs4.BeautifulSoup(content, 'html5lib')
+
+    for line in htmldoc.strings:
+        if 'var spectra' in line:
+            spectra_data = line.split('=')[1].strip()
+
+            spectra_data = Table(eval(spectra_data[1:-2]))
+
+    spectra_meta = Table.read(content, format='ascii.html')
+
+    spectra = hstack([spectra_meta, spectra_data], join_type='outer')
+
+    if save:
+        spectra.write('{}.fits'.format(name))
+
+    return spectra
+
+
+def make_plot(spectra, name, interval=200):
+
+    fig, ax = plt.subplots()
+    fig.set_tight_layout(True)
+
+    line, = ax.plot(spectra[1]['rp'])
+
+    ax.set_xlabel('Pixel')
+    ax.set_ylabel('ADU')
+
+    def update(i):
+        line.set_ydata(spectra[i]['rp'])
+        return line, ax
+
+    anim = FuncAnimation(fig, update, frames=np.arange(0, len(spectra)),
+                         interval=interval)
+
+    anim.save('{}.gif'.format(name), dpi=200, writer='imagemagick')
+
+
+def main(name='Gaia18boz', save=True):
+    """
+
+    """
+    spectra = get_data(name, save)
+
+    make_plot(spectra, name)
+
+
+if __name__ == "__main__":
+    if len(sys.argv) > 1:
+        if 'help' in str(sys.argv[1:]):
+            print("Usage of {0}:".format(os.path.basename(sys.argv[0])))
+            print(main.__doc__)
+        else:
+            main(name=sys.argv[1])
+
+    else:
+        main()
