@@ -9,11 +9,11 @@ from astropy.table import Table, hstack
 import astropy.utils.data as aud
 
 
-def get_data(name, save=True):
+def get_data(name, output):
 
     baseurl = 'http://gsaweb.ast.cam.ac.uk/alerts/alert'
 
-    content = aud.get_file_contents("{}/{}".format(baseurl, name))
+    content = aud.get_file_contents("{}/{}".format(baseurl, name), cache=True)
     htmldoc = bs4.BeautifulSoup(content, 'html5lib')
 
     for line in htmldoc.strings:
@@ -26,13 +26,14 @@ def get_data(name, save=True):
 
     spectra = hstack([spectra_meta, spectra_data], join_type='outer')
 
-    if save:
-        spectra.write('{}.fits'.format(name))
+    if output is not None:
+        spectra.write(os.path.join(output, '{}.fits'.format(name)),
+                      overwrite=True)
 
     return spectra
 
 
-def make_plot(spectra, name, interval=200):
+def make_plot(spectra, name, output, interval=200):
 
     fig, ax = plt.subplots()
     fig.set_tight_layout(True)
@@ -49,16 +50,18 @@ def make_plot(spectra, name, interval=200):
     anim = FuncAnimation(fig, update, frames=np.arange(0, len(spectra)),
                          interval=interval)
 
-    anim.save('{}.gif'.format(name), dpi=200, writer='imagemagick')
+    if output is not None:
+        anim.save(os.path.join(output, '{}.gif'.format(name)),
+                  dpi=200, writer='imagemagick')
 
 
-def main(name='Gaia18boz', save=True):
+def main(name='Gaia18ace', output='../outputs'):
     """
 
     """
-    spectra = get_data(name, save)
+    spectra = get_data(name, output)
 
-    make_plot(spectra, name)
+    make_plot(spectra, name, output)
 
 
 if __name__ == "__main__":
