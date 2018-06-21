@@ -1,12 +1,15 @@
-import bs4
 import os
+import bs4
 import sys
+import warnings
 
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
-from astropy.table import Table, hstack
+
 import astropy.utils.data as aud
+from astropy.table import Table, hstack, vstack
+from astropy.io.ascii import InconsistentTableError
 
 
 def get_data(name, output_directory):
@@ -22,9 +25,16 @@ def get_data(name, output_directory):
 
             spectra_data = Table(eval(spectra_data[1:-2]))
 
-    spectra_meta = Table.read(content, format='ascii.html')
-
+    try:
+        spectra_meta = Table.read(content, format='ascii.html')
+    except InconsistentTableError:
+        if "Not found" in content:
+            warnings.warn("data is not found for {}, check whether it's a "
+                          "valid GaiaAlerts object".format(name))
+            return None
     spectra = hstack([spectra_meta, spectra_data], join_type='outer')
+
+    spectra['Name'] = name
 
     if output_directory is not None:
         spectra.write(os.path.join(output_directory, '{}.fits'.format(name)),
@@ -63,10 +73,32 @@ def main(name='Gaia18ace', output_directory='../outputs', make_plots=False):
         if not os.path.exists(output_directory):
             os.makedirs(output_directory)
 
-    spectra = get_data(name, output_directory)
+    spectra = []
+    missing = 0
+
+    for alert_name in name.split(','):
+        alert_spectra = get_data(alert_name, output_directory)
+
+        if alert_spectra is None:
+            missing += 1
+        else:
+            spectra.append((alert_spectra, alert_name))
 
     if make_plots is True:
-        make_plot(spectra, name, output_directory)
+        for alert_spectra, alert_name in spectra:
+            make_plot(alert_spectra, name, output_directory)
+
+    if len(spectra) > 1:
+        all_spectra = vstack([i[0] for i in spectra])
+        if output_directory is not None:
+            all_spectra.write(os.path.join(output_directory,
+                                           'GaiaAlertsspectra.fits'),
+                              overwrite=True)
+
+        return all_spectra
+
+    else:
+        return alert_spectra
 
 
 if __name__ == "__main__":
