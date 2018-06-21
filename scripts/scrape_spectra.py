@@ -67,6 +67,28 @@ def make_plot(spectra, name, output_directory, interval=200):
 
 def main(name='Gaia18ace', output_directory='../outputs', make_plots=False):
     """
+    Function to scrape Gaia spectrum data from the GaiaAlers page.
+
+    Saves the spectroscopy data to a fits file, and optionally creates a gif
+    animation.
+
+    Parameters
+    ----------
+    name : str
+        Name of the alert, or comma separated names of alerts.
+
+    output_directory : str
+        Name of output directory. Use None if no output is required.
+        Defaults to '../outputs'. Results are overwritten.
+
+    make_plots : bool
+        If True, creates a gif animation.
+
+
+    Returns
+    -------
+    alerts_spectra : astropy.table.Table
+        A table containing the spectra data for all the valid input objects.
 
     """
     if output_directory is not None:
