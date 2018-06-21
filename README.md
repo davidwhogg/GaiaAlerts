@@ -1,5 +1,5 @@
 # GaiaAlerts
-scrape data from the Gaia alerts index
+scrape data from the ESA *Gaia* Mission Alerts Index
 
 ## Authors
 - **David W. Hogg** *(NYU) (MPIA) (Flatiron)*
@@ -7,3 +7,6 @@ scrape data from the Gaia alerts index
 
 ## License
 All code in this project is released under an open-source license. See the file `LICENSE` for more information.
+
+## Acknowledgements
+This is an academic project; please cite us if you use this code. Additionally, if you use the data in any scientific publications, there are acknowledgment and citation requirements from the *Gaia* Mission. Obey!
